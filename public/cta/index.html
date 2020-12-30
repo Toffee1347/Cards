@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="google-site-verification" content="Q2LZeCl8BqgfPfDaWEhXA-i6tRTah6SxI0-ckgeBZZ8" />
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+        <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Trispace'>
+        <link rel="stylesheet" href="/style.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tsparticles/1.18.1/tsparticles.min.js" integrity="sha512-PYHWDEuXOTJ9MZ+/QHqkbgiEYZ+LImQv3i/9NyYOABFvK37e4q4Wg7aQDN1JpoGiEu1TYZh6JMrZluZox2gbDA==" crossorigin="anonymous"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/token.js"></script>
+        <script src="/cardAnim.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+        <title>Snake</title>
+    </head>
+    <body onbeforeunload="return unload()">
+        <div class="container">
+            <div class="center">
+                <!--<input style="height: 40px;" class="top-right" onclick="copy(window.location.href.split('?')[0])" type="button" value="Copy Link"><br><br>-->
+                <div id="join">
+                    Waiting for More Players<br>
+                    <x id="playOne">Players: <br></x>
+                    <div class="break"></div>
+                    <div id="players" class="playerList" style="background-color: lightgray; padding: 20px;"><br></div>
+                    <div class="break"></div>
+                    Game ID: *||*GAMEID*||*<br><br>
+                    <input onclick="emits.emit('ctaStart', window.location.hash.replace('#', '').split('?')[0])" id="ready" type="button" class="btn" disabled value="Start!">
+                </div>
+                <div id="game">
+                    <div style="padding: 40px;" id="gamePlaySpace"></div>
+                </div>
+            </div>
+        </div>
+        <script>
+            function kick(player) {
+                emits.emit('ctaKick', {gameId:window.location.hash.replace('#', '').split('?')[0], player:player})
+            }
+            function page_onload() {
+                window.gameId = window.location.hash.replace('#', '').split('?')[0]
+                $('#game').hide()
+                $('#ready').hide()
+                $('#players').hide()
+                $('#playOne').hide()
+                emits.on('ctaPlayerOne', (body, token) => {
+                    $('#ready').show()
+                    $('#players').show()
+                    $('#playOne').show()
+                })
+                emits.on('ctaClientKicked', (body, token) => {
+                    alert('You have been kicked from the game')
+                    window.location.href = '/'
+                })
+                emits.on('inncorrect', (body, token) => {
+                    window.location.href = '/'
+                })
+                emits.on('setCard', (body, token) => {
+                    Card(`p${player}`, players[player], body.card.image, body.lives)
+                })
+                emits.on('start', (body, token) => {
+                    window.player = body.player
+                    window.players = body.players
+                    $('#join').hide()
+                    document.getElementById('gamePlaySpace').innerHTML = ''
+                    for (i = 0; body.count - 1 >= i; i++) {
+                        if (i == body.player) {
+                            document.getElementById('gamePlaySpace').innerHTML += `<div class="player" style="display: inline-block; background-color: white; position: relative;" id="p${i}"></div>`
+                        }
+                        else {
+                            document.getElementById('gamePlaySpace').innerHTML += `<div class="player" style="display: inline-block; background-color: grey; position: relative;" id="p${i}"></div>`
+                        }
+                        Card(`p${i}`, players[i], '/static/img/cardBack.png', body.lives[i])
+                    }
+                    $('#game').show()
+                })
+                emits.on('setPlayerCard', (body, token) => {
+                    Card(`p${body.player}`, players[body.player], body.card.image, body.lives)
+                })
+                emits.on('ctaPlayerCount', (body, token) => {
+                    document.getElementById('players').innerHTML = ''
+                    for (let player in body) {
+                        document.getElementById('players').innerHTML += `<div class="disable-select" href="javascript:void(0)" style="padding: 2px;" id="${player}" onclick="kick(${player})" onmouseover="this.innerHTML = ('🛇 ' + this.innerHTML).strike()" onmouseout="this.innerHTML = this.innerHTML.replace('<strike>🛇 ', '').replace('</strike>', '')">${body[player]}</div>`
+                    }
+                })
+                emits.on('ctaButtonStatus', (body, token) => {
+                    document.getElementById('ready').disabled = body
+                })
+                document.getElementById('join').innerHTML = document.getElementById('join').innerHTML.replace('*||*GAMEID*||*', gameId)
+                if (!window.location.hash.split('?')[1]) {
+                    return window.location.href = '/join#/cta#' + gameId
+                }
+                emits.emit('ctaJoin', {gameId:gameId, username:decodeURI(window.location.hash.split('?')[1])})
+                emits.on('ctaSucsess', (body, token) => {
+                    console.log('Connected to game sucsessfully')
+                })
+                emits.on('playersGo', (body, token) => {
+                    if (body.player == player) {
+                        document.getElementById(`p${body.player}img`).style.filter = 'blur(1px)'
+                        document.getElementById(`p${body.player}`).innerHTML += `<div class="image-centered" id="p${body.player}text"></div>`
+                        document.getElementById(`p${body.player}text`).innerHTML += `<p style="color: white; font-size: large;" id="p${body.player}text">Your turn!</p>`
+                        document.getElementById(`p${body.player}text`).innerHTML += `<input type="button" class="btn" value="Swap" onclick="emits.emit('ctaswap', {gameId:gameId})">`
+                        document.getElementById(`p${body.player}text`).innerHTML += `<div class="break"></div>`
+                        document.getElementById(`p${body.player}text`).innerHTML += `<input type="button" class="btn" value="Stick" onclick="emits.emit('ctastick', {gameId:gameId})">`
+                    }
+                    else {
+                        document.getElementById(`p${body.player}img`).style.filter = 'blur(10px)'
+                        document.getElementById(`p${body.player}`).innerHTML += `<div style="color: white; font-size: x-large;" class="image-centered" id="p${body.player}text">${players[body.player]} is currently playing</div>`
+                    }
+                })
+                emits.on('finPlayersGo', (body, token) => {
+                    document.getElementById(`p${body.player}img`).style.filter = 'blur(0px)'
+                    document.getElementById(`p${body.player}text`).remove()
+                })
+            }
+        </script>
+    </body>
+</html>

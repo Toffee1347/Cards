@@ -1,0 +1,100 @@
+body {
+    background-color: black;
+    font-family: Trispace;
+    z-index: 0;
+    animation-name: page-load;
+    animation-duration: 0.5s;
+    animation-play-state: paused;
+}
+.center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 100vh;
+}
+.top-right { 
+    display: flex;
+    flex: 50%;
+    text-align: right;
+    margin: 20px;
+}
+.margin {
+    margin: 5px;
+}
+.title {
+    font-size: 75px;
+}
+@keyframes button {
+    0% {
+        transform: scale(1);
+    }
+    25% {
+        transform: scale(.9);
+    }
+    50% {
+        transform: scale(1);
+    }
+    75% {
+        transform: scale(.9);
+    }
+}
+@keyframes page-load {
+    from {
+      opacity: 0;
+    }
+  
+    to {
+      opacity: 1;
+    }
+}
+@keyframes page-leave {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+button {
+    animation-name: button;
+    animation-duration: 5s;
+    animation-iteration-count: infinite;
+}
+.leaving {
+    animation-name: page-leave;
+    animation-duration: 0.5s;
+}
+.playerList {
+    margin-left: 10px;
+    margin-right: 10px;
+}
+.playerList:first-child {
+    margin-top: 15px;
+}
+.playerList:last-child {
+    margin-bottom: 15px;
+}
+.disable-select {
+    user-select: none;
+   -webkit-user-select: none;
+   -khtml-user-select: none;
+   -moz-user-select: none;
+   -ms-user-select: none;
+}
+.player {
+    padding: 10px;
+    margin: 25px;
+    border-radius: 20px;
+}
+.image-centered {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; 
+}
+.break {
+    height: 20px;
+}

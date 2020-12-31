@@ -19,12 +19,12 @@
         <div class="container">
             <div class="center">
                 <div class="content">
-                    <div class="title animate__animated animate__zoomIn">Cards</div>
+                    <div id="title" class="title animate__animated animate__zoomIn"></div>
                     <br>
+                    <ol id="text"></ol>
                     <div id="buttons" class="animate__animated animate__rollIn">
                         <form id="gameForm">
-                            <input maxlength="10" id="name" type="text"><br><br>
-                            <button class="btn" type="submit">Join</button>
+                            <button class="btn" type="submit">Play again</button>
                         </form>
                     </div>
                 </div>
@@ -32,13 +32,17 @@
         </div>
         <script>
             function page_onload() {
-                document.title = `Joining ${window.location.hash.split('#')[2]}`
-                document.getElementById('name').placeholder = localStorage.getItem('name') || 'Username'
+                window.res = JSON.parse(atob(location.hash.replace('#', '')))
+                document.getElementById('title').innerHTML = res.title
+                window.list = document.getElementById('text')
+                for (const x of res.lead) {
+                    list.innerHTML += `<li>${x}</li>`
+                }
+
                 document.getElementById('gameForm').onsubmit = (ev) => {
                     ev.preventDefault()
                     sessionStorage.setItem('userNamePicked', true)
-                    localStorage.setItem('name', document.getElementById('name').value || localStorage.getItem('name'))
-                    window.location.replace(window.location.hash.replace('#', '') + '?' + (encodeURI(document.getElementById('name').value) || encodeURI(localStorage.getItem('name'))))
+                    window.location.replace(res.playAgain)
                 }
             }
         </script>

@@ -21,7 +21,7 @@ const socket_commands = [
                     token: token,
                     emit: emit,
                     username:body.username,
-                    lives: 3,
+                    lives: 1,
                     alive: true
                 })
                 games[body.gameId].playerCount++
@@ -37,7 +37,7 @@ const socket_commands = [
                     token: token,
                     emit: emit,
                     username:body.username,
-                    lives: 3,
+                    lives: 1,
                     alive: true
                 })
                 games[body.gameId].playerCount++
@@ -125,6 +125,7 @@ const socket_commands = [
                         if (games[body.gameId].players[i].card.value != 'KING') {
                             games[body.gameId].playersGo = i
                             games[body.gameId].emit('playersGo', {player:games[body.gameId].playersGo})
+                            games[body.gameId].emitOut('outplayersGo', {player:games[body.gameId].playersGo})
                         }
                         else {
                             ctaFinishRound(body.gameId)
@@ -134,6 +135,7 @@ const socket_commands = [
                     else if (games[body.gameId].players[i].card.value != 'KING' && games[body.gameId].players[parseInt(i)+1].card.value != 'KING') {
                         games[body.gameId].playersGo = i
                         games[body.gameId].emit('playersGo', {player:games[body.gameId].playersGo})
+                        games[body.gameId].emitOut('outplayersGo', {player:games[body.gameId].playersGo})
                         break;
                     }
                 }
@@ -147,6 +149,7 @@ const socket_commands = [
                 if (i == games[body.gameId].players.length - 1) {
                     let cards = await games[body.gameId].deck.draw()
                     games[body.gameId].players[i].card = cards[0]
+                    games[body.gameId].emitOut('outSetCard', {card:cards[0], lives:games[body.gameId].players[i].lives, player:i})
                     if (games[body.gameId].players[i].card.value == 'KING') {
                         games[body.gameId].emit('setPlayerCard', {player:i, card:games[body.gameId].players[i].card, lives:games[body.gameId].players[i].lives})
                     }
@@ -162,6 +165,8 @@ const socket_commands = [
                     games[body.gameId].players[player2].card = cards[0]
                     games[body.gameId].players[player1].emit('setCard', {card:cards[1], lives:games[body.gameId].players[player1].lives})
                     games[body.gameId].players[player2].emit('setCard', {card:cards[0], lives:games[body.gameId].players[player2].lives})
+                    games[body.gameId].emitOut('outSetCard', {card:cards[1], lives:games[body.gameId].players[player1].lives, player:player1})
+                    games[body.gameId].emitOut('outSetCard', {card:cards[0], lives:games[body.gameId].players[player2].lives, player:player2})
                     games[body.gameId].emit('finPlayersGo', {player: i})
                     games[body.gameId].playersGo++
                     for (let i = games[body.gameId].playersGo; i <= games[body.gameId].players.length; i++) {
@@ -173,6 +178,7 @@ const socket_commands = [
                             if (games[body.gameId].players[i].card.value != 'KING') {
                                 games[body.gameId].playersGo = i
                                 games[body.gameId].emit('playersGo', {player:games[body.gameId].playersGo})
+                                games[body.gameId].emitOut('outplayersGo', {player:games[body.gameId].playersGo})
                             }
                             else {
                                 ctaFinishRound(body.gameId)
@@ -182,6 +188,7 @@ const socket_commands = [
                         else if (games[body.gameId].players[i].card.value != 'KING' && games[body.gameId].players[parseInt(i)+1].card.value != 'KING') {
                             games[body.gameId].playersGo = i
                             games[body.gameId].emit('playersGo', {player:games[body.gameId].playersGo})
+                            games[body.gameId].emitOut('outplayersGo', {player:games[body.gameId].playersGo})
                             break;
                         }
                     }
@@ -224,9 +231,11 @@ const ctaFinishRound = async (id) => {
                 games[id].players[i].alive = false
                 games[id].playerCount--
                 games[id].out.push(games[id].players[i])
+                games[id].lead.unshift(games[id].players[i].username)
             }
         }
         games[id].emit('setPlayerCard', {player:i, card:games[id].players[i].card, lives:games[id].players[i].lives})
+        games[id].emitOut('outSetCard', {card:games[id].players[i].card, lives:games[id].players[i].lives, player:i})
     }
     let newList = []
     for (let i in games[id].players) {
@@ -238,7 +247,35 @@ const ctaFinishRound = async (id) => {
 
 
     setTimeout(async () => {
+        if (games[id].playerCount <= 1) {
+            for (const player of games[id].players) {
+                games[id].lead.unshift(player.username)
+            }
+            games[id].emit('ctaEnd', {title:`${games[id].lead[0]} won!`, lead: games[id].lead})
+            games[id].emitOut('ctaEnd', {title:`${games[id].lead[0]} won!`, lead: games[id].lead})
+            games[id] = {
+                lead: [],
+                playerCount: 0,
+                game:'cta',
+                status: 0,
+                players: [],
+                out: [],
+                deck: new Deck(() => {}),
+                emit: (name, body) => {
+                    for (const player of games[id].players) {
+                        player.emit(name, body)
+                    }
+                },
+                emitOut: (name, body) => {
+                    for (const player of games[id].out) {
+                        player.emit(name, body)
+                    }
+                }
+            }
+            return
+        }
         let cards = await games[id].deck.draw(games[id].playerCount)
+        games[id].emitOut('ctaSpecStart', {count:games[id].playerCount, players:players(games[id].players), lives:lives(games[id].players), cards:cards})
         for (let i in games[id].players) {
             games[id].players[i].card = cards[i]
             games[id].players[i].emit('start', {count:games[id].playerCount, player:i, players:players(games[id].players), lives:lives(games[id].players)})
@@ -250,9 +287,25 @@ const ctaFinishRound = async (id) => {
             }
         }
         for (let i in games[id].players) {
-            if (games[id].players[i].card.value != 'KING' && games[id].players[parseInt(i)+1].card.value != 'KING') {
+            if (games[id].players.length <= i) {
+                ctaFinishRound(id)
+                break;
+            }
+            else if (i == games[id].players.length - 1) {
+                if (games[id].players[i].card.value != 'KING') {
+                    games[id].playersGo = i
+                    games[id].emit('playersGo', {player:games[id].playersGo})
+                    games[id].emitOut('outplayersGo', {player:games[id].playersGo})
+                }
+                else {
+                    ctaFinishRound(id)
+                }
+                break;
+            }
+            else if (games[id].players[i].card.value != 'KING' && games[id].players[parseInt(i)+1].card.value != 'KING') {
                 games[id].playersGo = i
                 games[id].emit('playersGo', {player:games[id].playersGo})
+                games[id].emitOut('outplayersGo', {player:games[id].playersGo})
                 break;
             }
         }
@@ -340,6 +393,7 @@ function createCtaGame(onMake) {
         gameId = makeId()
     }
     games[gameId] = {
+        lead: [],
         playerCount: 0,
         game:'cta',
         status: 0,
@@ -348,6 +402,11 @@ function createCtaGame(onMake) {
         deck: new Deck(() => {onMake(gameId)}),
         emit: (name, body) => {
             for (const player of games[gameId].players) {
+                player.emit(name, body)
+            }
+        },
+        emitOut: (name, body) => {
+            for (const player of games[gameId].out) {
                 player.emit(name, body)
             }
         }

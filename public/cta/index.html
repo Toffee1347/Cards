@@ -32,6 +32,9 @@
                 <div id="game">
                     <div style="padding: 40px;" id="gamePlaySpace"></div>
                 </div>
+                <div id="death">
+                    <div style="padding: 40px;" id="deathSpecSpace"></div>
+                </div>
             </div>
         </div>
         <script>
@@ -44,6 +47,7 @@
                 $('#ready').hide()
                 $('#players').hide()
                 $('#playOne').hide()
+                $('#death').hide()
                 emits.on('ctaPlayerOne', (body, token) => {
                     $('#ready').show()
                     $('#players').show()
@@ -88,10 +92,16 @@
                     document.getElementById('ready').disabled = body
                 })
                 document.getElementById('join').innerHTML = document.getElementById('join').innerHTML.replace('*||*GAMEID*||*', gameId)
-                if (!window.location.hash.split('?')[1]) {
-                    return window.location.href = '/join#/cta#' + gameId
-                }
                 emits.emit('ctaJoin', {gameId:gameId, username:decodeURI(window.location.hash.split('?')[1])})
+                if (!window.location.hash.split('?')[1]) {
+                    return window.location.replace('/join#/cta#' + gameId)
+                }
+                if (!sessionStorage.getItem('userNamePicked')) {
+                    return window.location.replace('/join#/cta#' + gameId)
+                }
+                else {
+                    sessionStorage.removeItem('userNamePicked')
+                }
                 emits.on('ctaSucsess', (body, token) => {
                     console.log('Connected to game sucsessfully')
                 })
@@ -110,9 +120,33 @@
                     }
                 })
                 emits.on('finPlayersGo', (body, token) => {
-                    document.getElementById(`p${body.player}img`).style.filter = 'blur(0px)'
-                    document.getElementById(`p${body.player}text`).remove()
-                    console.log(`Player ${body.player} has finished!`)
+                    if (document.getElementById(`p${body.player}text`)) {
+                        document.getElementById(`p${body.player}img`).style.filter = 'blur(0px)'
+                        document.getElementById(`p${body.player}text`).remove()
+                    }
+                })
+                emits.on('ctaSpecStart', (body, token) => {
+                    window.players = body.players
+                    document.getElementById('deathSpecSpace').innerHTML = ''
+                    $('#game').hide()
+                    document.getElementById('gamePlaySpace').innerHTML = ''
+                    for (let i in players) {
+                        document.getElementById('deathSpecSpace').innerHTML += `<div class="player" style="display: inline-block; background-color: grey; position: relative;" id="p${i}"></div>`
+                        Card(`p${i}`, players[i], body.cards[i].image, body.lives[i])
+                    }
+                    $('#death').show()
+                })
+                emits.on('outplayersGo', (body, token) => {
+                    for (let i in players) {
+                        document.getElementById(`p${i}`).style.backgroundColor = 'grey'
+                    }
+                    document.getElementById(`p${body.player}`).style.backgroundColor = 'white'
+                })
+                emits.on('outSetCard', (body, token) => {
+                    Card(`p${body.player}`, players[body.player], body.card.image, body.lives)
+                })
+                emits.on('ctaEnd', (body, token) => {
+                    window.location.replace(`/end#${btoa(JSON.stringify({...body, playAgain:window.location.href}))}`)
                 })
             }
         </script>

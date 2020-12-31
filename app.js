@@ -21,7 +21,8 @@ const socket_commands = [
                     token: token,
                     emit: emit,
                     username:body.username,
-                    lives: 3
+                    lives: 3,
+                    alive: true
                 })
                 games[body.gameId].playerCount++
                 emit('ctaPlayerCount', players(games[body.gameId].players))
@@ -36,7 +37,8 @@ const socket_commands = [
                     token: token,
                     emit: emit,
                     username:body.username,
-                    lives: 3
+                    lives: 3,
+                    alive: true
                 })
                 games[body.gameId].playerCount++
                 games[body.gameId].players[0].emit('ctaPlayerCount', players(games[body.gameId].players))
@@ -220,10 +222,19 @@ const ctaFinishRound = async (id) => {
             games[id].players[i].lives--
             if (games[id].players[i].lives == 0) {
                 games[id].players[i].alive = false
+                games[id].playerCount--
+                games[id].out.push(games[id].players[i])
             }
         }
         games[id].emit('setPlayerCard', {player:i, card:games[id].players[i].card, lives:games[id].players[i].lives})
     }
+    let newList = []
+    for (let i in games[id].players) {
+        if (games[id].players[i].alive == true) {
+            newList.push(games[id].players[i])
+        }
+    }
+    games[id].players = newList
 
 
     setTimeout(async () => {
@@ -333,7 +344,7 @@ function createCtaGame(onMake) {
         game:'cta',
         status: 0,
         players: [],
-        dead: [],
+        out: [],
         deck: new Deck(() => {onMake(gameId)}),
         emit: (name, body) => {
             for (const player of games[gameId].players) {

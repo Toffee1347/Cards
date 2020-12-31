@@ -112,6 +112,7 @@
                 emits.on('finPlayersGo', (body, token) => {
                     document.getElementById(`p${body.player}img`).style.filter = 'blur(0px)'
                     document.getElementById(`p${body.player}text`).remove()
+                    console.log(`Player ${body.player} has finished!`)
                 })
             }
         </script>

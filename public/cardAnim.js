@@ -15,7 +15,6 @@ function Card(id, username, image = '/static/img/cardBack.png', livesCount = 3) 
     document.getElementById(id).innerHTML = `<p style="text-align: center;"><b>${username}</b><br>Lives: ${lives}</p><img id="${id}img" src="${image}">`
 }
 
-
 function copy(text) {
     var textArea = document.createElement("textarea")
     textArea.value = text
@@ -24,4 +23,10 @@ function copy(text) {
     textArea.select()
     document.execCommand('copy')
     document.body.removeChild(textArea)
-  }
+}
+
+function loadImg(src, onComplete) {
+    let img = new Image()
+    img.onload = onComplete
+    img.src = src
+}

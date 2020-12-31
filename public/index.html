@@ -23,10 +23,25 @@
                     <br>
                     <div id="buttons" class="animate__animated animate__rollIn">
                         <a href="./start/cta"><button class="btn btn-primary margin button-anim" type="button">Play Chase the Ace</button></a><br>
-                        <a href="./options"><button class="btn btn-primary margin button-anim" type="button">Options</button></a><br>
+                        <div class="break"></div>
+                        <form id="join">
+                            <input id="name" type="text" minlength=1 maxlength="10" placeholder="Username" required><input id="gameId" type="text" minlength="5" maxlength="5" placeholder="Game Code" required><br>
+                            <input class="btn" type="submit" value="Join">
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
+        <script>
+            function page_onload() {
+                document.getElementById('name').placeholder = localStorage.getItem('name') || 'Username'
+                document.getElementById('join').onsubmit = (ev) => {
+                    ev.preventDefault()
+                    sessionStorage.setItem('userNamePicked', true)
+                    localStorage.setItem('name', document.getElementById('name').value || localStorage.getItem('name'))
+                    window.location.replace('/cta#' + document.getElementById('gameId').value + '?' + (encodeURI(document.getElementById('name').value) || encodeURI(localStorage.getItem('name'))))
+                }
+            }
+        </script>
     </body>
 </html>

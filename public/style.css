@@ -14,11 +14,17 @@ body {
     text-align: center;
     min-height: 100vh;
 }
+.center-game {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 90vh;
+}
 .top-right { 
     display: flex;
-    flex: 50%;
-    text-align: right;
-    margin: 20px;
+    justify-content: flex-start;
 }
 .margin {
     margin: 5px;

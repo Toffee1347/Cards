@@ -18,14 +18,18 @@
     </head>
     <body onbeforeunload="return unload()">
         <div class="container">
-            <div class="center">
-                <!--<input style="height: 40px;" class="top-right" onclick="copy(window.location.href.split('?')[0])" type="button" value="Copy Link"><br><br>-->
+            <div id="cpyBtn" class="top-right">
+                <input class="btn" style="margin-top: 15px;" onclick="copy(window.location.href.split('?')[0])" type="button" value="Copy Link"><br><br>
+            </div>
+            <div id="center" class="center-game">
                 <div id="join">
                     Waiting for More Players<br>
                     <x id="playOne">Players: <br></x>
-                    <div class="break"></div>
-                    <div id="players" class="playerList" style="background-color: lightgray; padding: 20px;"><br></div>
-                    <div class="break"></div>
+                    <div id="adminPlayers">
+                        <div class="break"></div>
+                        <div id="players" class="playerList" style="background-color: lightgray; padding: 20px;"><br></div>
+                        <div class="break"></div>
+                    </div>
                     Game ID: *||*GAMEID*||*<br><br>
                     <input onclick="emits.emit('ctaStart', window.location.hash.replace('#', '').split('?')[0])" id="ready" type="button" class="btn" disabled value="Start!">
                 </div>
@@ -45,12 +49,12 @@
                 window.gameId = window.location.hash.replace('#', '').split('?')[0]
                 $('#game').hide()
                 $('#ready').hide()
-                $('#players').hide()
+                $('#adminPlayers').hide()
                 $('#playOne').hide()
                 $('#death').hide()
                 emits.on('ctaPlayerOne', (body, token) => {
                     $('#ready').show()
-                    $('#players').show()
+                    $('#adminPlayers').show()
                     $('#playOne').show()
                 })
                 emits.on('ctaClientKicked', (body, token) => {
@@ -67,6 +71,10 @@
                     window.player = body.player
                     window.players = body.players
                     $('#join').hide()
+                    $('#center').removeClass('center-game')
+                    $('#center').addClass('center')
+                    $('#cpyBtn').hide()
+                    $('#adminPlayers').hide()
                     document.getElementById('gamePlaySpace').innerHTML = ''
                     for (i = 0; body.count - 1 >= i; i++) {
                         if (i == body.player) {

@@ -21,7 +21,7 @@ const socket_commands = [
                     token: token,
                     emit: emit,
                     username:body.username,
-                    lives: 1,
+                    lives: 3,
                     alive: true
                 })
                 games[body.gameId].playerCount++
@@ -37,7 +37,7 @@ const socket_commands = [
                     token: token,
                     emit: emit,
                     username:body.username,
-                    lives: 1,
+                    lives: 3,
                     alive: true
                 })
                 games[body.gameId].playerCount++
@@ -67,6 +67,10 @@ const socket_commands = [
             }
         }
         for (let i in games[body].players) {
+            if (games[body].players.length <= i) {
+                ctaFinishRound(body)
+                break;
+            }
             if (games[body].players[i].card.value != 'KING' && games[body].players[parseInt(i)+1].card.value != 'KING') {
                 games[body].playersGo = i
                 games[body].emit('playersGo', {player:games[body].playersGo})

@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="google-site-verification" content="Q2LZeCl8BqgfPfDaWEhXA-i6tRTah6SxI0-ckgeBZZ8" />
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-        <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Trispace'>
+        <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto'>
         <link rel="stylesheet" href="/style.css">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
@@ -14,9 +14,10 @@
         <script src="/token.js"></script>
         <script src="/cardAnim.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-        <title>Snake</title>
+        <title>Chase the Ace</title>
     </head>
     <body onbeforeunload="return unload()">
+        <div id="particles"></div>
         <div class="container">
             <div id="cpyBtn" class="top-right">
                 <input class="btn" style="margin-top: 15px;" onclick="copy(window.location.href.split('?')[0])" type="button" value="Copy Link"><br><br>
@@ -47,6 +48,7 @@
             }
             function page_onload() {
                 window.gameId = window.location.hash.replace('#', '').split('?')[0]
+                document.title = `${gameId} | Chase the Ace`
                 $('#game').hide()
                 $('#ready').hide()
                 $('#adminPlayers').hide()
